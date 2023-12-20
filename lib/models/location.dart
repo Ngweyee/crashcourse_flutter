@@ -1,8 +1,9 @@
-import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
-import '../endpoint.dart';
-import './location_fact.dart';
 import 'package:http/http.dart' as http;
+import './location_fact.dart';
+import '../endpoint.dart';
+import 'dart:convert';
+
 part 'location.g.dart';
 
 @JsonSerializable()
@@ -10,38 +11,47 @@ class Location {
   final int id;
   final String name;
   final String url;
-  final List<LocationFact> facts;
-  Location({required this.id, required this.name, required this.url, required this.facts});
+  final List<LocationFact>? facts;
 
+  Location(
+      {required this.id,
+      required this.name,
+      required this.url,
+      required this.facts});
+
+  Location.blank()
+      : id = 0,
+        name = '',
+        url = '',
+        facts = [];
 
   factory Location.fromJson(Map<String, dynamic> json) =>
       _$LocationFromJson(json);
 
-  static Future<List<Location>> fetchAll() async{
-    var uri = Endpoint.uri('/locations');
+  static Future<List<Location>> fetchAll() async {
+    var uri = Endpoint.uri('/locations', queryParameters: {});
 
-    final response = await http.get(uri);
-    // Await the http get response, then decode the json-formatted response.
-    if (response.statusCode != 200) {
-      throw (response.body);
+    final resp = await http.get(uri);
+
+    if (resp.statusCode != 200) {
+      throw (resp.body);
     }
-    List<Location> locations = [];
-    for (var jsonItem in json.decode(response.body)){
-      locations.add(Location.fromJson(jsonItem));
+    List<Location> list = <Location>[];
+    for (var jsonItem in json.decode(resp.body)) {
+      list.add(Location.fromJson(jsonItem));
     }
-    return locations;
+    return list;
   }
 
-  static Future<Location> fetchById(int id) async{
-    var uri = Endpoint.uri('/locations/$id');
+  static Future<Location> fetchByID(int id) async {
+    var uri = Endpoint.uri('/locations/$id', queryParameters: {});
 
-    final response = await http.get(uri);
-    // Await the http get response, then decode the json-formatted response.
-    if (response.statusCode != 200) {
-      throw (response.body);
+    final resp = await http.get(uri);
+
+    if (resp.statusCode != 200) {
+      throw (resp.body);
     }
-
-    final Map<String, dynamic> itemMap = json.decode(response.body);
+    final Map<String, dynamic> itemMap = json.decode(resp.body);
     return Location.fromJson(itemMap);
   }
 }

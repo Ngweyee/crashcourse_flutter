@@ -4,6 +4,5 @@ import 'mocks/mock_location.dart';
 import 'app.dart';
 
 void main() {
-
   return runApp(App());
 }
