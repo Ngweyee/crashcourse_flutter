@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   json_annotation: ^4.8.1
   http: ^1.1.2
+  url_launcher: ^6.0.8
 
 dev_dependencies:
   flutter_test:
@@ -90,7 +91,9 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 
   fonts:
-    - family: Muli
+    - family: Montserrat
       fonts:
-        - asset: assets/Muli-Light.ttf
+        - asset: assets/Montserrat-Regular.ttf
           weight: 300
+        - asset: assets/Montserrat-Bold.ttf
+          weight: 600

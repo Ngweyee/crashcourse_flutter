@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'models/location.dart';
+import 'components/default_app_bar.dart';
+import 'components/banner_image.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'components/location_tile.dart';
 import 'styles.dart';
+
+const BannerImageHeight = 300.0;
+const BodyVerticalPadding = 20.0;
+const FooterHeight = 100.0;
 
 class LocationDetail extends StatefulWidget {
   final int locationID;
@@ -19,27 +27,63 @@ class _LocationDetailState extends State<LocationDetail> {
 
   @override
   void initState() {
+    super.initState();
     loadData();
-  }
-
-  loadData() async {
-    final location = await Location.fetchByID(this.locationID);
-    setState(() {
-      this.location = location;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text(location.name, style: Styles.navBarTitle)),
-        body: SingleChildScrollView(
-          child: Column(
+        appBar: DefaultAppBar(),
+        body: Stack(children: [
+          _renderBody(context, location),
+          _renderFooter(context, location),
+        ]));
+  }
+
+  loadData() async {
+    final location = await Location.fetchByID(this.locationID);
+
+    if (mounted) {
+      setState(() {
+        this.location = location;
+      });
+    }
+  }
+
+  Widget _renderBody(BuildContext context, Location location) {
+    var result = <Widget>[];
+    result.add(BannerImage(url: location.url, height: BannerImageHeight));
+    result.add(_renderHeader());
+    result.addAll(_renderFacts(context, location));
+    return SingleChildScrollView(
+        child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: _renderBody(context, location),
-          ),
-        ));
+            children: result));
+  }
+
+  Widget _renderHeader() {
+    return Container(
+        padding: EdgeInsets.symmetric(
+            vertical: BodyVerticalPadding,
+            horizontal: Styles.horizontalPaddingDefault),
+        child: LocationTile(location: this.location, darkTheme: false));
+  }
+
+  Widget _renderFooter(BuildContext context, Location location) {
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.5)),
+            height: FooterHeight,
+            child: Container(
+                padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
+                child: _renderBookButton()),
+          )
+        ]);
   }
 
   List<Widget> _renderFacts(BuildContext context, Location location) {
@@ -51,37 +95,37 @@ class _LocationDetailState extends State<LocationDetail> {
     return result;
   }
 
-  List<Widget> _renderBody(BuildContext context, Location location) {
-    var result = <Widget>[];
-    result.add(_bannerImage(location.url, 170.0));
-    result.addAll(_renderFacts(context, location));
-    return result;
+  Widget _sectionTitle(String text) {
+    return Container(
+        padding: EdgeInsets.fromLTRB(Styles.horizontalPaddingDefault, 25.0,
+            Styles.horizontalPaddingDefault, 0.0),
+        child: Text(text.toUpperCase(),
+            textAlign: TextAlign.left, style: Styles.headerLarge));
   }
 
   Widget _sectionText(String text) {
     return Container(
         padding: EdgeInsets.fromLTRB(25.0, 15.0, 25.0, 15.0),
-        child: Text(
-          text,
-          style: Styles.textDefault,
-        ));
+        child: Text(text, style: Styles.textDefault));
   }
 
-  Widget _sectionTitle(String title) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(25.0, 25.0, 25.0, 10.0),
-      child: Text(
-        title,
-        textAlign: TextAlign.left,
-        style: Styles.headerLarge,
+  Widget _renderBookButton() {
+    return TextButton(
+      onPressed: _handleBookPress,
+      style: const ButtonStyle(
+        backgroundColor: MaterialStatePropertyAll<Color>(Colors.red),
       ),
+      child: Text('Book'.toUpperCase(), style: Styles.textCTAButton),
     );
   }
 
-  Widget _bannerImage(String imageUrl, double height) {
-    return Container(
-      constraints: BoxConstraints.tightFor(height: height),
-      child: Image.network(imageUrl, fit: BoxFit.fitWidth),
-    );
+  void _handleBookPress() async {
+    final Uri _url = Uri.parse('mailto:hello@tourism.co?subject=inquiry');
+
+    if (await canLaunchUrl(_url)) {
+      await launchUrl(_url);
+    } else {
+      print('Could not launch $_url');
+    }
   }
 }
