@@ -56,6 +56,7 @@ class _LocationDetailState extends State<LocationDetail> {
     result.add(BannerImage(url: location.url, height: BannerImageHeight));
     result.add(_renderHeader());
     result.addAll(_renderFacts(context, location));
+    result.add(_renderBottomSpacer());
     return SingleChildScrollView(
         child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -127,5 +128,9 @@ class _LocationDetailState extends State<LocationDetail> {
     } else {
       print('Could not launch $_url');
     }
+  }
+
+  Widget _renderBottomSpacer(){
+    return Container(height: FooterHeight);
   }
 }
