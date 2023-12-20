@@ -21,10 +21,10 @@ class _LocationListState extends State<LocationList> {
     loadData();
   }
 
-  loadData() async {
+  Future<void> loadData() async {
     if(this.mounted){
       setState(() => this.loading = true);
-      Timer(const Duration(milliseconds: 5000), () async {
+      Timer(const Duration(milliseconds: 3000), () async {
         final locations = await Location.fetchAll();
         setState(() {
           this.locations = locations;
@@ -39,12 +39,14 @@ class _LocationListState extends State<LocationList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Locations", style: Styles.navBarTitle)),
-      body: Column(children: [
+      body: RefreshIndicator(
+          onRefresh: loadData,
+          child: Column(children: [
         renderProgressBar(context),
         Expanded(child: renderListView(context))
       ],
 
-      )
+      ))
     );
   }
 
