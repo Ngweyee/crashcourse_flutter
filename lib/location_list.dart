@@ -1,8 +1,11 @@
-import 'package:crashcourse_flutter/location_detail.dart';
-import 'package:flutter/material.dart';
-import 'models/location.dart';
-import 'styles.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
+import 'components/location_tile.dart';
+import 'models/location.dart';
+import 'location_detail.dart';
+import 'styles.dart';
+
+const ListItemHeight = 245.0;
 
 class LocationList extends StatefulWidget {
   const LocationList({super.key});
@@ -50,16 +53,18 @@ class _LocationListState extends State<LocationList> {
     );
   }
 
-  Widget _listItemBuilder(BuildContext context, int index) {
+  Widget _listViewItemBuilder(BuildContext context, int index) {
     final location = this.locations[index];
-    return ListTile(
-      contentPadding: EdgeInsets.all(10.0),
-      leading: _itemThumbnail(location),
-      title: _itemTitle(location),
-      onTap: () {
-        _navigateToLocationDetail(context, location.id);
-      },
-    );
+    return GestureDetector(
+        onTap: () => _navigateToLocationDetail(context, location.id),
+        child: Container(
+          height: ListItemHeight,
+          child: Stack(children: [
+            _tileImage(location.url, MediaQuery.of(context).size.width,
+                ListItemHeight),
+            _tileFooter(location)
+          ]),
+        ));
   }
 
   void _navigateToLocationDetail(BuildContext context, int locationID) {
@@ -69,19 +74,44 @@ class _LocationListState extends State<LocationList> {
     );
   }
 
-  Widget _itemThumbnail(Location location) {
-    return Container(
-      constraints: BoxConstraints.tightFor(width: 100.0),
-      child: Image.network(location.url, fit: BoxFit.fitWidth),
-    );
+
+  Widget _tileImage(String url, double width, double height) {
+    if (url.isEmpty) {
+      return Container();
+    }
+
+    try {
+      return Container(
+        constraints: BoxConstraints.expand(),
+        child: Image.network(url, fit: BoxFit.cover),
+      );
+    } catch (e) {
+      print("could not load image $url");
+      return Container();
+    }
   }
 
+  Widget _tileFooter(Location location){
+    final info = LocationTile(location: location, darkTheme: true);
+    final overlay = Container(
+      padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: Styles.horizontalPaddingDefault),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+      child: info,
+    );
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        overlay
+      ],
+    );
+  }
   Widget _itemTitle(Location location) {
     return Text('${location.name}', style: Styles.textDefault);
   }
 
   Widget renderProgressBar(BuildContext context) {
-    return loading ? LinearProgressIndicator(
+    return loading ? const LinearProgressIndicator(
       value: null,
       backgroundColor: Colors.white,
       valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
@@ -91,7 +121,7 @@ class _LocationListState extends State<LocationList> {
   Widget renderListView(BuildContext context) {
     return ListView.builder(
       itemCount: this.locations.length,
-      itemBuilder: _listItemBuilder,
+      itemBuilder: _listViewItemBuilder,
     );
   }
 }
