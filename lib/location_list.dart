@@ -2,6 +2,7 @@ import 'package:crashcourse_flutter/location_detail.dart';
 import 'package:flutter/material.dart';
 import 'models/location.dart';
 import 'styles.dart';
+import 'dart:async';
 
 class LocationList extends StatefulWidget {
   const LocationList({super.key});
@@ -12,6 +13,7 @@ class LocationList extends StatefulWidget {
 
 class _LocationListState extends State<LocationList> {
   List<Location> locations = [];
+  bool loading = false;
 
   @override
   void initState() {
@@ -20,20 +22,29 @@ class _LocationListState extends State<LocationList> {
   }
 
   loadData() async {
-    final locations = await Location.fetchAll();
-    setState(() {
-      this.locations = locations;
-    });
+    if(this.mounted){
+      setState(() => this.loading = true);
+      Timer(const Duration(milliseconds: 5000), () async {
+        final locations = await Location.fetchAll();
+        setState(() {
+          this.locations = locations;
+          this.loading = false;
+        });
+      });
+    }
+
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Locations", style: Styles.navBarTitle)),
-      body: ListView.builder(
-        itemCount: this.locations.length,
-        itemBuilder: _listItemBuilder,
-      ),
+      body: Column(children: [
+        renderProgressBar(context),
+        Expanded(child: renderListView(context))
+      ],
+
+      )
     );
   }
 
@@ -44,7 +55,6 @@ class _LocationListState extends State<LocationList> {
       leading: _itemThumbnail(location),
       title: _itemTitle(location),
       onTap: () {
-        print("id is " + location.id.toString());
         _navigateToLocationDetail(context, location.id);
       },
     );
@@ -66,5 +76,20 @@ class _LocationListState extends State<LocationList> {
 
   Widget _itemTitle(Location location) {
     return Text('${location.name}', style: Styles.textDefault);
+  }
+
+  Widget renderProgressBar(BuildContext context) {
+    return loading ? LinearProgressIndicator(
+      value: null,
+      backgroundColor: Colors.white,
+      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+    ) : Container();
+  }
+
+  Widget renderListView(BuildContext context) {
+    return ListView.builder(
+      itemCount: this.locations.length,
+      itemBuilder: _listItemBuilder,
+    );
   }
 }
